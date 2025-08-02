@@ -253,6 +253,8 @@ class SentenceTransformersEmbeddingFNLLM:
         cache: PipelineCache | None = None,
     ) -> None:
         self.model = SentenceTransformer(config.model)
+        if torch.cuda.is_available():
+            self.model.to("cuda")
 
     async def aembed_batch(self, text_list: list[str], **kwargs) -> list[list[float]]:
         """
