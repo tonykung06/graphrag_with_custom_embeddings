@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Any, Literal, cast
 
 import pandas as pd
+from graphrag.index.operations.chunk_text.strategies import get_encoding, get_encoding_fn
 import tiktoken
 
 import graphrag.config.defaults as defs
@@ -103,9 +104,9 @@ class TokenTextSplitter(TextSplitter):
                 logger.exception(
                     "Model %s not found, using %s", model_name, encoding_name
                 )
-                enc = tiktoken.get_encoding(encoding_name)
+                enc = get_encoding(encoding_name)
         else:
-            enc = tiktoken.get_encoding(encoding_name)
+            enc = get_encoding(encoding_name)
         self._tokenizer = enc
         self._allowed_special = allowed_special or set()
         self._disallowed_special = disallowed_special

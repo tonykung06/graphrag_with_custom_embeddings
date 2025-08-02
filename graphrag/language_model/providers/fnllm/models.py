@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
 
 from fnllm.openai import (
@@ -25,6 +26,8 @@ from graphrag.language_model.response.base import (
     BaseModelResponse,
     ModelResponse,
 )
+import torch
+from sentence_transformers import SentenceTransformer
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
@@ -239,7 +242,166 @@ class OpenAIEmbeddingFNLLM:
         """
         return run_coroutine_sync(self.aembed(text, **kwargs))
 
+class SentenceTransformersEmbeddingFNLLM:
+    """An Huggingface Embedding Model provider using the fnllm library."""
+    def __init__(
+        self,
+        *,
+        name: str,
+        config: LanguageModelConfig,
+        callbacks: WorkflowCallbacks | None = None,
+        cache: PipelineCache | None = None,
+    ) -> None:
+        self.model = SentenceTransformer(config.model)
 
+    async def aembed_batch(self, text_list: list[str], **kwargs) -> list[list[float]]:
+        """
+        Embed the given text using the Model.
+
+        Args:
+            text: The text to embed.
+            kwargs: Additional arguments to pass to the LLM.
+
+        Returns
+        -------
+            The embeddings of the text.
+        """
+        embeddings = await asyncio.to_thread(self.model.encode, text_list)
+        return embeddings
+
+    async def aembed(self, text: str, **kwargs) -> list[float]:
+        """
+        Embed the given text using the Model.
+
+        Args:
+            text: The text to embed.
+            kwargs: Additional arguments to pass to the Model.
+
+        Returns
+        -------
+            The embeddings of the text.
+        """
+        embeddings = await self.aembed_batch([text], **kwargs)
+        return embeddings[0]
+
+    def embed_batch(self, text_list: list[str], **kwargs) -> list[list[float]]:
+        """
+        Embed the given text using the Model.
+
+        Args:
+            text: The text to embed.
+            kwargs: Additional arguments to pass to the LLM.
+
+        Returns
+        -------
+            The embeddings of the text.
+        """
+        return run_coroutine_sync(self.aembed_batch(text_list, **kwargs))
+
+    def embed(self, text: str, **kwargs) -> list[float]:
+        """
+        Embed the given text using the Model.
+
+        Args:
+            text: The text to embed.
+            kwargs: Additional arguments to pass to the Model.
+
+        Returns
+        -------
+            The embeddings of the text.
+        """
+        return run_coroutine_sync(self.aembed(text, **kwargs))
+
+class VertexAIEmbeddingFNLLM:
+    """An Vertex AI Embedding Model provider using the fnllm library."""
+
+    model: FNLLMEmbeddingLLM
+
+    def __init__(
+        self,
+        *,
+        name: str,
+        config: LanguageModelConfig,
+        callbacks: WorkflowCallbacks | None = None,
+        cache: PipelineCache | None = None,
+    ) -> None:
+        model_config = _create_openai_config(config, azure=False)
+        error_handler = _create_error_handler(callbacks) if callbacks else None
+        model_cache = _create_cache(cache, name)
+        client = create_openai_client(model_config)
+        self.model = create_openai_embeddings_llm(
+            model_config,
+            client=client,
+            cache=model_cache,
+            events=FNLLMEvents(error_handler) if error_handler else None,
+        )
+        self.config = config
+
+    async def aembed_batch(self, text_list: list[str], **kwargs) -> list[list[float]]:
+        """
+        Embed the given text using the Model.
+
+        Args:
+            text: The text to embed.
+            kwargs: Additional arguments to pass to the LLM.
+
+        Returns
+        -------
+            The embeddings of the text.
+        """
+        response = await self.model(text_list, **kwargs)
+        if response.output.embeddings is None:
+            msg = "No embeddings found in response"
+            raise ValueError(msg)
+        embeddings: list[list[float]] = response.output.embeddings
+        return embeddings
+
+    async def aembed(self, text: str, **kwargs) -> list[float]:
+        """
+        Embed the given text using the Model.
+
+        Args:
+            text: The text to embed.
+            kwargs: Additional arguments to pass to the Model.
+
+        Returns
+        -------
+            The embeddings of the text.
+        """
+        response = await self.model([text], **kwargs)
+        if response.output.embeddings is None:
+            msg = "No embeddings found in response"
+            raise ValueError(msg)
+        embeddings: list[float] = response.output.embeddings[0]
+        return embeddings
+
+    def embed_batch(self, text_list: list[str], **kwargs) -> list[list[float]]:
+        """
+        Embed the given text using the Model.
+
+        Args:
+            text: The text to embed.
+            kwargs: Additional arguments to pass to the LLM.
+
+        Returns
+        -------
+            The embeddings of the text.
+        """
+        return run_coroutine_sync(self.aembed_batch(text_list, **kwargs))
+
+    def embed(self, text: str, **kwargs) -> list[float]:
+        """
+        Embed the given text using the Model.
+
+        Args:
+            text: The text to embed.
+            kwargs: Additional arguments to pass to the Model.
+
+        Returns
+        -------
+            The embeddings of the text.
+        """
+        return run_coroutine_sync(self.aembed(text, **kwargs))
 class AzureOpenAIChatFNLLM:
     """An Azure OpenAI Chat LLM provider using the fnllm library."""
 

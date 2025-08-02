@@ -5,6 +5,7 @@
 
 import logging
 
+from graphrag.index.operations.chunk_text.strategies import get_encoding, get_encoding_fn
 import tiktoken
 
 import graphrag.config.defaults as defs
@@ -24,9 +25,9 @@ def num_tokens_from_string(
         except KeyError:
             msg = f"Failed to get encoding for {model} when getting num_tokens_from_string. Fall back to default encoding {DEFAULT_ENCODING_NAME}"
             logger.warning(msg)
-            encoding = tiktoken.get_encoding(DEFAULT_ENCODING_NAME)
+            encoding = get_encoding(DEFAULT_ENCODING_NAME)
     else:
-        encoding = tiktoken.get_encoding(encoding_name or DEFAULT_ENCODING_NAME)
+        encoding = get_encoding(encoding_name or DEFAULT_ENCODING_NAME)
     return len(encoding.encode(string))
 
 
@@ -37,7 +38,7 @@ def string_from_tokens(
     if model is not None:
         encoding = tiktoken.encoding_for_model(model)
     elif encoding_name is not None:
-        encoding = tiktoken.get_encoding(encoding_name)
+        encoding = get_encoding(encoding_name)
     else:
         msg = "Either model or encoding_name must be specified."
         raise ValueError(msg)

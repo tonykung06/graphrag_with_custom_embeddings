@@ -11,8 +11,10 @@ from graphrag.language_model.protocol import ChatModel, EmbeddingModel
 from graphrag.language_model.providers.fnllm.models import (
     AzureOpenAIChatFNLLM,
     AzureOpenAIEmbeddingFNLLM,
+    SentenceTransformersEmbeddingFNLLM,
     OpenAIChatFNLLM,
     OpenAIEmbeddingFNLLM,
+    VertexAIEmbeddingFNLLM,
 )
 
 
@@ -111,4 +113,10 @@ ModelFactory.register_embedding(
 )
 ModelFactory.register_embedding(
     ModelType.OpenAIEmbedding, lambda **kwargs: OpenAIEmbeddingFNLLM(**kwargs)
+)
+ModelFactory.register_embedding(
+    ModelType.SentenceTransformersEmbedding, lambda **kwargs: SentenceTransformersEmbeddingFNLLM(**kwargs)
+)
+ModelFactory.register_embedding(
+    ModelType.VertexAIEmbedding, lambda **kwargs: VertexAIEmbeddingFNLLM(**kwargs)
 )

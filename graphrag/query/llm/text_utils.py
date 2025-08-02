@@ -9,6 +9,7 @@ import re
 from collections.abc import Iterator
 from itertools import islice
 
+from graphrag.index.operations.chunk_text.strategies import get_encoding
 import tiktoken
 from json_repair import repair_json
 
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 def num_tokens(text: str, token_encoder: tiktoken.Encoding | None = None) -> int:
     """Return the number of tokens in the given text."""
     if token_encoder is None:
-        token_encoder = tiktoken.get_encoding(defs.ENCODING_MODEL)
+        token_encoder = get_encoding(defs.ENCODING_MODEL)
     return len(token_encoder.encode(text))  # type: ignore
 
 

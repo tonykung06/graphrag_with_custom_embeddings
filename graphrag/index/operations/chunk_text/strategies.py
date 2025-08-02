@@ -15,11 +15,27 @@ from graphrag.index.text_splitting.text_splitting import (
     split_multiple_texts_on_tokens,
 )
 from graphrag.logger.progress import ProgressTicker
+from transformers import AutoTokenizer
 
+def get_encoding(encoding_name: str):
+    """Get the encoding based on the encoding name."""
+    if encoding_name.startswith("vertexai/"):
+        enc = tiktoken.get_encoding("cl100k_base")
+    elif encoding_name.startswith("sentence-transformers/"):
+        enc = AutoTokenizer.from_pretrained(encoding_name)
+    else:
+        try:
+            enc = tiktoken.get_encoding(encoding_name)
+        except KeyError:
+            msg = f"Encoding {encoding_name} not found. Using default encoding."
+            print(msg)  # Use print for simplicity in this context
+            enc = tiktoken.get_encoding("cl100k_base")  # Default encoding
+
+    return enc
 
 def get_encoding_fn(encoding_name):
     """Get the encoding model."""
-    enc = tiktoken.get_encoding(encoding_name)
+    enc = get_encoding(encoding_name)
 
     def encode(text: str) -> list[int]:
         if not isinstance(text, str):

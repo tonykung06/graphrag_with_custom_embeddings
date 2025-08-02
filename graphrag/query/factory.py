@@ -3,6 +3,7 @@
 
 """Query Factory methods to support CLI."""
 
+from graphrag.index.operations.chunk_text.strategies import get_encoding
 import tiktoken
 
 from graphrag.callbacks.query_callbacks import QueryCallbacks
@@ -68,7 +69,7 @@ def get_local_search_engine(
         config=embedding_settings,
     )
 
-    token_encoder = tiktoken.get_encoding(model_settings.encoding_model)
+    token_encoder = get_encoding(model_settings.encoding_model)
 
     ls_config = config.local_search
 
@@ -135,7 +136,7 @@ def get_global_search_engine(
     model_params = get_openai_model_parameters_from_config(model_settings)
 
     # Here we get encoding based on specified encoding name
-    token_encoder = tiktoken.get_encoding(model_settings.encoding_model)
+    token_encoder = get_encoding(model_settings.encoding_model)
     gs_config = config.global_search
 
     dynamic_community_selection_kwargs = {}
@@ -226,7 +227,7 @@ def get_drift_search_engine(
         config=embedding_model_settings,
     )
 
-    token_encoder = tiktoken.get_encoding(chat_model_settings.encoding_model)
+    token_encoder = get_encoding(chat_model_settings.encoding_model)
 
     return DRIFTSearch(
         model=chat_model,
@@ -277,7 +278,7 @@ def get_basic_search_engine(
         config=embedding_model_settings,
     )
 
-    token_encoder = tiktoken.get_encoding(chat_model_settings.encoding_model)
+    token_encoder = get_encoding(chat_model_settings.encoding_model)
 
     bs_config = config.basic_search
 

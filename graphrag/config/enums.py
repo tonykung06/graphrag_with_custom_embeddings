@@ -78,6 +78,8 @@ class ModelType(str, Enum):
     # Embeddings
     OpenAIEmbedding = "openai_embedding"
     AzureOpenAIEmbedding = "azure_openai_embedding"
+    SentenceTransformersEmbedding = "sentence_transformers_embedding"
+    VertexAIEmbedding = "vertex_ai_embedding"
 
     # Chat Completion
     OpenAIChat = "openai_chat"
